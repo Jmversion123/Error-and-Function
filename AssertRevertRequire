@@ -1,36 +1,44 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity >=0.6.12 <0.9.0;
 
-contract AssertRevertRequire {
-// Contract to demonstrate the usage of assert, require, and revert in Solidity
-    uint256 public commandCount; 
-// Counter for the number of commands
+contract AssertRevertRequired {
+    address public owner;
+    uint256 public totalValue;
 
-    struct command {
-        address sender; // Address of the sender
-        uint select; // Selection made by the sender
-        bool sent; // Flag indicating whether the command has been sent
+    constructor() {
+        owner = msg.sender;
     }
 
-    mapping (uint => command) public commands;  // Mapping to store commands indexed by command number
-
-
-    function makecommand (uint select) public payable returns (uint){
-        require(msg.value >= 100 ether, "The amount required you put doesn't work.");
-        // Require that the value sent with the transaction is at least 100 ether
-        command memory newcommand = command(msg.sender, select, false);
-        commandCount++;
-        commands[commandCount] = newcommand;
-      
-        return commandCount; // Return the command count
-    }
-    // Function to mark a command as sent
-    function sent(uint commandNumber) public {
-         // Mark the specified command as sent
-        commands[commandNumber].sent = true;
+    function deposit(uint256 amount) external {
+        // Ensure only the contract owner can deposit
+        require(msg.sender == owner, "Only owner can deposit");
         
-        // Assertion to check whether the sent flag of the command is true
-        assert(commands[commandNumber].sent == true);
-        // This is a bug check to validate the correctness of the code
+        // Ensure the deposit amount is positive
+        require(amount > 0, "Deposit amount must be greater than zero");
+
+        // Update totalValue with the deposit amount
+        totalValue += amount;
+    }
+
+    function withdraw(uint256 amount) external {
+        // Ensure the withdrawal amount is not greater than the contract's balance
+        require(amount <= address(this).balance, "Insufficient balance");
+
+        // Ensure the withdrawal amount is positive
+        require(amount > 0, "Withdrawal amount must be greater than zero");
+
+        // Ensure the caller is the contract owner
+        if (msg.sender != owner) {
+            revert("Unauthorized access");
+        }
+
+        // Assert that the subtraction does not cause underflow
+        assert(totalValue >= amount);
+
+        // Perform the withdrawal
+        payable(owner).transfer(amount);
+
+        // Update totalValue
+        totalValue -= amount;
     }
 }
