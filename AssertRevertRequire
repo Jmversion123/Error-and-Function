@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract AssertRevertRequire {
+// Contract to demonstrate the usage of assert, require, and revert in Solidity
+    uint256 public commandCount; 
+// Counter for the number of commands
+
+    struct command {
+        address sender; // Address of the sender
+        uint select; // Selection made by the sender
+        bool sent; // Flag indicating whether the command has been sent
+    }
+
+    mapping (uint => command) public commands;  // Mapping to store commands indexed by command number
+
+
+    function makecommand (uint select) public payable returns (uint){
+        require(msg.value >= 100 ether, "The amount required you put doesn't work.");
+        // Require that the value sent with the transaction is at least 100 ether
+        command memory newcommand = command(msg.sender, select, false);
+        commandCount++;
+        commands[commandCount] = newcommand;
+      
+        return commandCount; // Return the command count
+    }
+    // Function to mark a command as sent
+    function sent(uint commandNumber) public {
+         // Mark the specified command as sent
+        commands[commandNumber].sent = true;
+        
+        // Assertion to check whether the sent flag of the command is true
+        assert(commands[commandNumber].sent == true);
+        // This is a bug check to validate the correctness of the code
+    }
+}
